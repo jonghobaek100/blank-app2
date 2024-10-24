@@ -50,7 +50,7 @@ def get_weather_from_gps(lat, lon):
 
     # Get the current date and time for the KMA API request
     base_date = datetime.now().strftime('%Y%m%d')
-    base_time = datetime.now().strftime('%H00')
+    base_time = datetime.now().strftime('%H%M')
 
     params = {
         'serviceKey': KMA_SERVICE_KEY,

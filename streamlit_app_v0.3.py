@@ -6,16 +6,10 @@ import folium
 from streamlit_folium import folium_static
 from folium import PolyLine
 import streamlit.components.v1 as components
-from datetime import datetime
-import json
 
 # Naver Map API keys (set your own API keys)
 NAVER_CLIENT_ID = '5b3r8u2xce'
 NAVER_CLIENT_SECRET = '1iz0tE4nqXs9SK3Rtjjj3F2esabQzg78hZfbIJ9V'
-
-# KMA API base URL and service key
-KMA_API_BASE_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst"
-KMA_SERVICE_KEY = '+E2kZoggsplAVHSalBbmXsDDqs2L5eIkLgHoW6HN/wtAOAVtxMFMQDaOL/G6hMb3Oq76ApjHSUd88VjRdfk6CQ=='  # Replace with your KMA service key
 
 # Function to get GPS coordinates from Naver API using an address
 def get_gps_from_address(address):
@@ -27,75 +21,15 @@ def get_gps_from_address(address):
     params = {"query": address}
     response = requests.get(url, headers=headers, params=params)
     if response.status_code == 200:
-        try:
-            result = response.json()
-            if result['meta']['totalCount'] > 0:
-                lat = result['addresses'][0]['y']
-                lon = result['addresses'][0]['x']
-                return float(lat), float(lon)
-            else:
-                return None
-        except json.JSONDecodeError:
-            st.error("Failed to decode GPS response from Naver API.")
+        result = response.json()
+        if result['meta']['totalCount'] > 0:
+            lat = result['addresses'][0]['y']
+            lon = result['addresses'][0]['x']
+            return float(lat), float(lon)
+        else:
             return None
     else:
-        st.error(f"Failed to get GPS coordinates from Naver API: {response.status_code}")
-        return None
-
-# Function to get weather data from KMA API using GPS coordinates
-def get_weather_from_gps(lat, lon):
-    # Convert latitude and longitude to grid x, y using an approximate method
-    nx = int((lon - 123.0) * 5)  # Example conversion, adjust as needed
-    ny = int((lat - 32.0) * 5)   # Example conversion, adjust as needed
-
-    # Get the current date and time for the KMA API request
-    base_date = datetime.now().strftime('%Y%m%d')
-    base_time = datetime.now().strftime('%H00')
-
-    params = {
-        'serviceKey': KMA_SERVICE_KEY,
-        'numOfRows': 10,
-        'pageNo': 1,
-        'dataType': 'JSON',
-        'base_date': base_date,
-        'base_time': base_time,
-        'nx': nx,
-        'ny': ny
-    }
-
-    response = requests.get(KMA_API_BASE_URL, params=params)
-    if response.status_code == 200:
-        try:
-            result = response.json()
-            if 'response' in result and 'body' in result['response']:
-                items = result['response']['body']['items']['item']
-                # Extract temperature, wind speed, wind direction, and humidity
-                weather_data = {
-                    'temperature': None,
-                    'wind_speed': None,
-                    'wind_direction': None,
-                    'humidity': None
-                }
-                for item in items:
-                    if item['category'] == 'T1H':
-                        weather_data['temperature'] = item['obsrValue']
-                    elif item['category'] == 'WSD':
-                        weather_data['wind_speed'] = item['obsrValue']
-                    elif item['category'] == 'VEC':
-                        weather_data['wind_direction'] = item['obsrValue']
-                    elif item['category'] == 'REH':
-                        weather_data['humidity'] = item['obsrValue']
-                return weather_data
-            else:
-                st.error("Unexpected response format from KMA API.")
-                return None
-        except json.JSONDecodeError:
-            st.error("Failed to decode weather data response from KMA API.")
-            st.text(f"Response content: {response.text}")  # Log response for debugging
-            return None
-    else:
-        st.error(f"Failed to get weather information from KMA API: {response.status_code}")
-        st.text(f"Response content: {response.text}")  # Log response for debugging
+        st.error("Failed to get GPS coordinates from Naver API")
         return None
 
 # Function to calculate distance from target coordinates
@@ -106,8 +40,7 @@ def calculate_distance(row, target_coordinates):
         mid_point = points[len(points) // 2]
         mid_point_coordinates = (mid_point[1], mid_point[0])
         return geodesic(target_coordinates, mid_point_coordinates).meters
-    except Exception as e:
-        st.error(f"Error calculating distance: {e}")
+    except:
         return None
 
 # Main Streamlit app
@@ -153,19 +86,6 @@ with st.container():
         if gps_coordinates:
             st.session_state['gps_coordinates'] = gps_coordinates  # Store in session_state
             st.success(f"📍 GPS 좌표: {gps_coordinates[0]}, {gps_coordinates[1]}")
-
-            # Get weather data
-            weather_data = get_weather_from_gps(gps_coordinates[0], gps_coordinates[1])
-            if weather_data:
-                st.session_state['weather_data'] = weather_data  # Store in session_state
-                st.markdown(
-                    f"""<div class="section">🌤️ <b>날씨 정보</b><br>
-                    온도: {weather_data['temperature']}℃<br>
-                    풍속: {weather_data['wind_speed']} m/s<br>
-                    풍향: {weather_data['wind_direction']}°<br>
-                    습도: {weather_data['humidity']}%<br></div>""",
-                    unsafe_allow_html=True
-                )
         else:
             st.error("GPS 좌표를 가져올 수 없습니다.")
 
