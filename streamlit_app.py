@@ -48,13 +48,16 @@ def get_weather_from_gps(lat, lon):
     nx = int((lon - 123.0) * 5)  # Example conversion, adjust as needed
     ny = int((lat - 32.0) * 5)   # Example conversion, adjust as needed
 
-    # Get the current date and time for the KMA API request
-    base_date = datetime.now().strftime('%Y%m%d')
-    base_time = datetime.now().strftime('%H00')
+    # Get the current date and adjust base time to the nearest hour for KMA API request
+    now = datetime.now()
+    if now.minute < 30:
+        now = now - timedelta(hours=1)
+    base_date = now.strftime('%Y%m%d')
+    base_time = now.strftime('%H') + '30'  # KMA API provides data every hour at HH30
 
     params = {
         'serviceKey': KMA_SERVICE_KEY,
-        'numOfRows': 10,
+        'numOfRows': 100,
         'pageNo': 1,
         'dataType': 'JSON',
         'base_date': base_date,
@@ -71,20 +74,20 @@ def get_weather_from_gps(lat, lon):
                 items = result['response']['body']['items']['item']
                 # Extract temperature, wind speed, wind direction, and humidity
                 weather_data = {
-                    'temperature': None,
-                    'wind_speed': None,
-                    'wind_direction': None,
-                    'humidity': None
+                    'temperature': -999,
+                    'wind_speed': -999,
+                    'wind_direction': -999,
+                    'humidity': -999
                 }
                 for item in items:
                     if item['category'] == 'T1H':
-                        weather_data['temperature'] = item['obsrValue']
+                        weather_data['temperature'] = item.get('obsrValue', -999)
                     elif item['category'] == 'WSD':
-                        weather_data['wind_speed'] = item['obsrValue']
+                        weather_data['wind_speed'] = item.get('obsrValue', -999)
                     elif item['category'] == 'VEC':
-                        weather_data['wind_direction'] = item['obsrValue']
+                        weather_data['wind_direction'] = item.get('obsrValue', -999)
                     elif item['category'] == 'REH':
-                        weather_data['humidity'] = item['obsrValue']
+                        weather_data['humidity'] = item.get('obsrValue', -999)
                 return weather_data
             else:
                 st.error("Unexpected response format from KMA API.")
@@ -97,6 +100,7 @@ def get_weather_from_gps(lat, lon):
         st.error(f"Failed to get weather information from KMA API: {response.status_code}")
         st.text(f"Response content: {response.text}")  # Log response for debugging
         return None
+
 
 # Function to calculate distance from target coordinates
 def calculate_distance(row, target_coordinates):
