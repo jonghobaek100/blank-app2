@@ -54,12 +54,16 @@ def get_weather_info(latitude, longitude):
     }
     response = requests.get(WEATHER_BASE_URL, params=params)
     if response.status_code == 200:
-        data = response.json()
-        if data.get("response").get("header").get("resultCode") == "00":
-            items = data.get("response").get("body").get("items").get("item")
-            return items
-        else:
-            st.error("데이터 조회에 실패했습니다.")
+        try:
+            data = response.json()
+            if data.get("response").get("header").get("resultCode") == "00":
+                items = data.get("response").get("body").get("items").get("item")
+                return items
+            else:
+                st.error("데이터 조회에 실패했습니다.")
+                return None
+        except ValueError:
+            st.error("응답에서 JSON을 파싱하는 데 실패했습니다. 응답 내용이 올바르지 않을 수 있습니다.")
             return None
     else:
         st.error(f"API 요청에 실패했습니다. 상태 코드: {response.status_code}")
@@ -119,12 +123,9 @@ st.markdown(
 # UI for Address and Distance Input
 def address_and_distance_input():
     with st.container():
-        #st.markdown('<div class="section">🏠 <b>화재발생 주소 입력</b></div>', unsafe_allow_html=True)
         address = st.text_input("🏠화재발생 주소를 입력하세요 :", "경남 양산시 중뫼길 36", key='address_input', help="주소를 입력하고 GPS 좌표를 조회하세요.")
-        
-        #st.markdown('<div class="section">📏 <b>화재 영향 범위 입력 (단위: m)</b></div>', unsafe_allow_html=True)
         distance_limit_str = st.text_input('📏화재영향 거리를 입력하세요 :', '1000', key='distance_input')
-        
+
         if st.button("화재발생지점 조회 🛰️", key='gps_button', help="입력된 주소의 GPS 좌표를 조회합니다."):
             gps_coordinates = get_gps_from_address(address)
             if gps_coordinates:
@@ -132,21 +133,17 @@ def address_and_distance_input():
                 st.success(f"📍 GPS 좌표: {gps_coordinates[0]}, {gps_coordinates[1]}")
                 # Fetch weather information for the given coordinates
                 display_weather_info(gps_coordinates)
+                # Automatically query and display cable information after getting GPS coordinates
+                try:
+                    distance_limit = float(distance_limit_str)  # 입력값 그대로 m 단위 사용
+                except ValueError:
+                    st.error("유효한 숫자를 입력하세요.")
+                    distance_limit = None
+
+                if distance_limit is not None:
+                    query_and_display_cables(gps_coordinates, distance_limit)
             else:
                 st.error("GPS 좌표를 가져올 수 없습니다.")
-
-        if st.button("케이블 조회 🕵️", key='cable_button', help="GPS 좌표를 바탕으로 주변 케이블을 조회합니다."):
-            try:
-                distance_limit = float(distance_limit_str)  # 입력값 그대로 m 단위 사용
-            except ValueError:
-                st.error("유효한 숫자를 입력하세요.")
-                distance_limit = None
-
-            if 'gps_coordinates' not in st.session_state:
-                st.error("먼저 GPS 좌표를 조회하세요.")
-            elif distance_limit is not None:
-                gps_coordinates = st.session_state['gps_coordinates']
-                query_and_display_cables(gps_coordinates, distance_limit)
 
 # Function to Display Weather Information
 def display_weather_info(gps_coordinates):
