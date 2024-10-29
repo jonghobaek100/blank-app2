@@ -5,6 +5,4 @@ geopy
 folium
 streamlit-folium
 
-# Additional libraries
-# These are used for handling specific parts of the code, such as JSON or datetime operations
-# and to ensure compatibility with different components used in the code.
+
