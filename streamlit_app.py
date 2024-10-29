@@ -120,7 +120,7 @@ st.markdown(
 def address_and_distance_input():
     with st.container():
         #st.markdown('<div class="section">🏠 <b>화재발생 주소 입력</b></div>', unsafe_allow_html=True)
-        address = st.text_input("🏠화재발생 주소를 입력하세요 :", "경남 양산시 용주로 368", key='address_input', help="주소를 입력하고 GPS 좌표를 조회하세요.")
+        address = st.text_input("🏠화재발생 주소를 입력하세요 :", "경남 양산시 중뫼길 36", key='address_input', help="주소를 입력하고 GPS 좌표를 조회하세요.")
         
         #st.markdown('<div class="section">📏 <b>화재 영향 범위 입력 (단위: m)</b></div>', unsafe_allow_html=True)
         distance_limit_str = st.text_input('📏화재영향 거리를 입력하세요 :', '1000', key='distance_input')
