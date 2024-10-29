@@ -83,6 +83,11 @@ def calculate_distance(row, target_coordinates):
 # Main Streamlit app
 st.title("🔥 화재발생 영향권 케이블 조회 🗺️")
 
+st.text_area("", """    ○ 화재 발생 지점 인근의 케이블을 조회하는 프로그램v1.0입니다.
+    ○ 양산지역만 샘플로 구현된 버전입니다.
+    ○ 지도표시 케이블(파란색: 영향 범위 내, 검은색 : 영향 범위 외, 빨간색: 중요케이블)                 
+""")
+
 # Custom CSS for rounded edges and section styling
 st.markdown(
     """
@@ -241,10 +246,10 @@ def display_cable_map(gps_coordinates, filtered_data, data):
     # Draw a line from the fire location to the closest cable
     if closest_cable:
         closest_point = closest_cable[len(closest_cable) // 2]  # Use the midpoint of the closest cable
-        folium.PolyLine([gps_coordinates, closest_point], color='red', weight=2, dash_array='5, 10', popup=f"거리: {min_distance:.2f}m").add_to(m)
+        folium.PolyLine([gps_coordinates, closest_point], color='red', weight=2, dash_array='5, 10').add_to(m)
         folium.Marker(
-            location=closest_point,
-            icon=folium.DivIcon(html=f'<div style="font-size: pt; color: red;">거리: {min_distance:.2f}m</div>')
+            location=((gps_coordinates[0] + closest_point[0]) / 2, (gps_coordinates[1] + closest_point[1]) / 2),
+            icon=folium.DivIcon(html=f'<div style="font-size: 12pt; color: red; white-space: nowrap;">거리: {min_distance:.2f}m</div>')
         ).add_to(m)
 
     folium_static(m)
