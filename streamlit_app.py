@@ -208,6 +208,8 @@ def display_cable_map(gps_coordinates, filtered_data, data):
         folium.PolyLine(line_coordinates, color="black", weight=2).add_to(m)
 
     # Highlight filtered cables
+    closest_cable = None
+    min_distance = float('inf')
     for _, row in filtered_data.iterrows():
         points_str = row['공간위치G'].replace("LINESTRING (", "").replace(")", "").split(", ")
         points = [tuple(map(float, point.split())) for point in points_str]
@@ -229,6 +231,20 @@ def display_cable_map(gps_coordinates, filtered_data, data):
             color=color,
             fill=True,
             fill_color=color
+        ).add_to(m)
+
+        # Find the closest cable
+        if row['계산거리'] < min_distance:
+            min_distance = row['계산거리']
+            closest_cable = line_coordinates
+
+    # Draw a line from the fire location to the closest cable
+    if closest_cable:
+        closest_point = closest_cable[len(closest_cable) // 2]  # Use the midpoint of the closest cable
+        folium.PolyLine([gps_coordinates, closest_point], color='red', weight=2, dash_array='5, 10', popup=f"거리: {min_distance:.2f}m").add_to(m)
+        folium.Marker(
+            location=closest_point,
+            icon=folium.DivIcon(html=f'<div style="font-size: pt; color: red;">거리: {min_distance:.2f}m</div>')
         ).add_to(m)
 
     folium_static(m)
