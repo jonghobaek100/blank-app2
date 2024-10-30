@@ -7,13 +7,22 @@ from streamlit_folium import folium_static
 from folium import PolyLine
 import streamlit.components.v1 as components
 import datetime
+import pytz  
 
 # Naver Map API keys (set your own API keys)
 NAVER_CLIENT_ID = '5b3r8u2xce'
 NAVER_CLIENT_SECRET = '1iz0tE4nqXs9SK3Rtjjj3F2esabQzg78hZfbIJ9V'
 # Weather API settings
 WEATHER_API_KEY = '+E2kZoggsplAVHSalBbmXsDDqs2L5eIkLgHoW6HN/wtAOAVtxMFMQDaOL/G6hMb3Oq76ApjHSUd88VjRdfk6CQ=='
-WEATHER_BASE_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst"
+WEATHER_BASE_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst" #초단기 실황조회
+#WEATHER_BASE_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst" #초단기 실황조회/안됨/파라가다른듯
+
+#전역변수 선언
+seoul_tz = pytz.timezone('Asia/Seoul')
+now = datetime.datetime.now(seoul_tz) - datetime.timedelta(hours=1)  # 현재시간 대비 1시간 전 날씨
+base_date = now.strftime("%Y%m%d")
+base_time = now.strftime("%H00")  # 정시에 업데이트 되므로 "HH00" 형태로 시간 설정
+
 
 # Function to get GPS coordinates from Naver API using an address
 def get_gps_from_address(address):
@@ -38,7 +47,11 @@ def get_gps_from_address(address):
 
 # Function to get weather information from the Korea Meteorological Administration (KMA) API
 def get_weather_info(latitude, longitude):
-    now = datetime.datetime.now()
+    # 서울 시간대를 설정하여 현재 시간 가져오기
+    seoul_tz = pytz.timezone('Asia/Seoul')
+    # now = datetime.datetime.now(seoul_tz)  # 최근 시간일 경우, 정각~데이터 나오는 시간까지 오류 발생
+    now = datetime.datetime.now(seoul_tz) - datetime.timedelta(hours=1)  # 현재시간 대비 1시간 전 날씨
+
     base_date = now.strftime("%Y%m%d")
     base_time = now.strftime("%H00")  # 정시에 업데이트 되므로 "HH00" 형태로 시간 설정
     nx, ny = 55, 127  # 예시 좌표로 설정 (사용자 정의 또는 계산 필요)
@@ -52,6 +65,7 @@ def get_weather_info(latitude, longitude):
         "nx": nx,
         "ny": ny,
     }
+    
     response = requests.get(WEATHER_BASE_URL, params=params)
     if response.status_code == 200:
         try:
@@ -154,7 +168,8 @@ def address_and_distance_input():
 def display_weather_info(gps_coordinates):
     weather_data = get_weather_info(gps_coordinates[0], gps_coordinates[1])
     if weather_data:
-        st.markdown('<div class="result-section">🌤️ <b>날씨 정보 (기상청) </b></div>', unsafe_allow_html=True)
+        st.markdown('<div class="result-section">🌤️ <b>날씨 정보 (기상청 초단기 실황) </b></div>', unsafe_allow_html=True)
+        st.write ("※ 기준시간 : ", base_date, base_time, gps_coordinates)
         category_mapping = {
             "T1H": "기온 (°C)",
             "RN1": "1시간 강수량 (mm)",
@@ -168,7 +183,8 @@ def display_weather_info(gps_coordinates):
             if category in selected_categories:
                 obsr_value = item.get("obsrValue")
                 category_name = category_mapping.get(category, category)
-                st.write(f"{category_name}: {obsr_value}")
+                st.write("  - ", f"{category_name}: {obsr_value}")
+                
 
 # Function to Query and Display Cable Information
 def query_and_display_cables(gps_coordinates, distance_limit):
