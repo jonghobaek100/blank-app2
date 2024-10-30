@@ -154,7 +154,7 @@ def address_and_distance_input():
 def display_weather_info(gps_coordinates):
     weather_data = get_weather_info(gps_coordinates[0], gps_coordinates[1])
     if weather_data:
-        st.markdown('<div class="result-section">🌤️ <b>날씨 정보 (기상청 최근 날씨) </b></div>', unsafe_allow_html=True)
+        st.markdown('<div class="result-section">🌤️ <b>날씨 정보 (기상청) </b></div>', unsafe_allow_html=True)
         category_mapping = {
             "T1H": "기온 (°C)",
             "RN1": "1시간 강수량 (mm)",
