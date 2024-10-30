@@ -169,7 +169,7 @@ def display_weather_info(gps_coordinates):
     weather_data = get_weather_info(gps_coordinates[0], gps_coordinates[1])
     if weather_data:
         st.markdown('<div class="result-section">🌤️ <b>날씨 정보 (기상청 초단기 실황) </b></div>', unsafe_allow_html=True)
-        st.write ("※ 기준시간 : ", base_date, base_time, gps_coordinates)
+        st.write ("                    ※ 기준시간 : ", base_date, base_time, gps_coordinates)
         category_mapping = {
             "T1H": "기온 (°C)",
             "RN1": "1시간 강수량 (mm)",
