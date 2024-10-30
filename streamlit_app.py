@@ -97,7 +97,7 @@ def calculate_distance(row, target_coordinates):
 # Main Streamlit app
 st.title("🔥 화재 영향권 케이블 조회 🗺️")
 
-st.text_area("", """    ○ 화재 발생 지점 인근의 케이블을 조회하는 프로그램v1.0입니다.
+st.text_area("", """    ○ 화재 발생 지점 인근의 케이블을 조회하는 프로그램v3.2입니다.
     ○ 양산지역만 샘플로 구현된 버전입니다.
     ○ 지도표시 케이블(파란색: 영향 범위 내, 검은색 : 영향 범위 외, 빨간색: 중요케이블)                 
 """)
