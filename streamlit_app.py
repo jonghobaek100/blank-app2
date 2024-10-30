@@ -185,7 +185,7 @@ def query_and_display_cables(gps_coordinates, distance_limit):
         filtered_data.insert(0, '순번', range(1, len(filtered_data) + 1))
         # Display the filtered and sorted data
         st.markdown('<div class="result-section">📋 <b>조회된 케이블 목록</b></div>', unsafe_allow_html=True)
-        result = filtered_data[['순번', '계산거리', '케이블관리번호', '시군구명', '읍면동명', '리명', '사용코어수', '중계기회선수', '중요선로' ]]
+        result = filtered_data[['순번', '계산거리', '케이블관리번호', '시군구명', '읍면동명', '케이블코어수', '사용코어수', '중계기회선수', '중요선로' ]]
         st.dataframe(result)
 
         # Display the map with cable lines
