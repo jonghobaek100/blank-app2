@@ -135,7 +135,7 @@ def address_and_distance_input():
             gps_coordinates = get_gps_from_address(address)
             if gps_coordinates:
                 st.session_state['gps_coordinates'] = gps_coordinates  # Store in session_state
-                st.success(f"📍 GPS 좌표(네이버맵): {gps_coordinates[0]}, {gps_coordinates[1]}")
+                st.success(f"📍 GPS 좌표 (네이버맵): {gps_coordinates[0]}, {gps_coordinates[1]}")
                 # Fetch weather information for the given coordinates
                 display_weather_info(gps_coordinates)
                 # Automatically query and display cable information after getting GPS coordinates
