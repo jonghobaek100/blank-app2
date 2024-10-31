@@ -23,7 +23,6 @@ now = datetime.datetime.now(seoul_tz) - datetime.timedelta(hours=1)  # 현재시
 base_date = now.strftime("%Y%m%d")
 base_time = now.strftime("%H00")  # 정시에 업데이트 되므로 "HH00" 형태로 시간 설정
 
-
 # Function to get GPS coordinates from Naver API using an address
 def get_gps_from_address(address):
     url = "https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode"
@@ -200,11 +199,12 @@ def query_and_display_cables(gps_coordinates, distance_limit):
         # Add 순번 column
         filtered_data.insert(0, '순번', range(1, len(filtered_data) + 1))
         # Display the filtered and sorted data
-        st.markdown('<div class="result-section">📋 <b>조회된 케이블 목록</b></div>', unsafe_allow_html=True)
+        st.markdown('<div class="result-section">📋 <b>화재 영향 케이블 목록</b></div>', unsafe_allow_html=True)
         result = filtered_data[['순번', '계산거리', '케이블관리번호', '시군구명', '읍면동명', '케이블코어수', '사용코어수', '중계기회선수', '중요선로' ]]
         st.dataframe(result)
 
         # Display the map with cable lines
+        st.markdown('<div class="result-section">🗺️ <b>Map 기반 화재 영향 케이블 조회</b></div>', unsafe_allow_html=True)
         display_cable_map(gps_coordinates, filtered_data, data)
     else:
         st.write(f"{distance_limit}m 내에 케이블이 없습니다.")
