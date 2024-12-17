@@ -10,7 +10,7 @@ st.set_page_config(
 
 # 대문 제목과 이미지
 st.image(
-    "https://via.placeholder.com/1200x400.png?text=AI%2FDT+Infra+Tools",
+    "./대문.webp",
     use_column_width=True,
     caption="동부유선Infra팀 AI Tool 모음"
 )
