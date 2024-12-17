@@ -8,14 +8,18 @@ from folium import PolyLine
 import streamlit.components.v1 as components
 import datetime
 import pytz  
+# Python 코드
+import os
+from dotenv import load_dotenv
 
-# Naver Map API keys (set your own API keys)
-NAVER_CLIENT_ID = '5b3r8u2xce'
-NAVER_CLIENT_SECRET = '1iz0tE4nqXs9SK3Rtjjj3F2esabQzg78hZfbIJ9V'
-# Weather API settings
-WEATHER_API_KEY = '+E2kZoggsplAVHSalBbmXsDDqs2L5eIkLgHoW6HN/wtAOAVtxMFMQDaOL/G6hMb3Oq76ApjHSUd88VjRdfk6CQ=='
-WEATHER_BASE_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst" #초단기 실황조회
-#WEATHER_BASE_URL = "http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst" #초단기 실황조회/안됨/파라가다른듯
+# .env 파일 로드
+load_dotenv()
+
+# API 키 및 URL 설정
+NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
+NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
+WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
+WEATHER_BASE_URL = os.getenv('WEATHER_BASE_URL')
 
 #전역변수 선언
 seoul_tz = pytz.timezone('Asia/Seoul')
