@@ -11,7 +11,7 @@ st.set_page_config(
 # 대문 제목과 이미지
 st.image(
     "./대문.webp",
-    use_column_width=True,
+    use_container_width=True,  # 기존 use_column_width를 use_container_width로 대체
     caption="동부유선Infra팀 AI Tool 모음"
 )
 st.title("🌐 동부유선Infra팀 AI Tool 모음")
