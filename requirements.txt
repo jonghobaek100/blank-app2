@@ -5,3 +5,4 @@ geopy
 folium
 streamlit-folium
 python-dotenv
+openai
