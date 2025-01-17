@@ -8,7 +8,7 @@ from folium import PolyLine
 import streamlit.components.v1 as components
 import datetime
 import pytz
-import openai  # OpenAI API 추가
+from openai import OpenAI  # OpenAI API 추가
 import os
 from dotenv import load_dotenv
 
@@ -20,9 +20,10 @@ NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
 NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
 WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
 WEATHER_BASE_URL = os.getenv('WEATHER_BASE_URL')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')  # OpenAI API 키
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-openai.api_key = OPENAI_API_KEY
+# OpenAI client 설정
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # 전역변수 선언
 seoul_tz = pytz.timezone('Asia/Seoul')
@@ -79,6 +80,7 @@ def get_weather_info(latitude, longitude):
                 return None
         except ValueError:
             st.error("응답에서 JSON을 파싱하는 데 실패했습니다. 응답 내용이 올바르지 않을 수 있습니다.")
+            st.write("**응답 디버깅**: ", response.text)  # 응답 내용 출력
             return None
     else:
         st.error(f"API 요청에 실패했습니다. 상태 코드: {response.status_code}")
@@ -91,35 +93,37 @@ def predict_fire_spread(gps_coordinates, wind_speed, wind_direction):
             f"현재 GPS 좌표: {gps_coordinates}, 풍속: {wind_speed}m/s, 풍향: {wind_direction}°. "
             "이를 바탕으로 1시간, 2시간, 3시간 후 화재 확산 범위를 추정해 주세요. 각 범위는 중심 좌표와 반경으로 출력해주세요."
         )
-        response = openai.ChatCompletion.create(
-            model="gpt-4",  # 최신 API 방식 적용
+        response = client.chat.completions.create(
+            model="gpt-4o",  # 4o 모델로 변경
             messages=[
                 {"role": "system", "content": "당신은 화재 확산 예측 전문가입니다."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7
         )
-        fire_spread_prediction = response.choices[0].message['content']
+        st.write("**OpenAI 응답 디버깅**", response)  # 응답 내용 출력
+        # OpenAI 응답 처리 수정
+        fire_spread_prediction = response.choices[0].message.content
         return fire_spread_prediction
     except Exception as e:
         st.error(f"OpenAI API 요청에 실패했습니다: {e}")
         return None
 
 # Main Streamlit app
-st.title("🔥 화장 영향권 카이블 조회 🗺️")
+st.title("🔥 화재 영향권 케이블 조회 🗺️")
 
-st.text_area("", """    ○ 화장 발생 지점 인근의 카이블을 조회하는 프로그램v3.2입니다.
-    ○ 양산지역만 생품로 구현된 버전입니다.
-    ○ 지도표시 카이블(파란색: 영향 범위 내, 검은색 : 영향 범위 외, 빨리색: 중요케이블)                 
+st.text_area("", """    ○ 화재 발생 지점 인근의 케이블을 조회하는 프로그램v3.2입니다.
+    ○ 양산지역만 샘플로 구현된 버전입니다.
+    ○ 지도표시 케이블(파란색: 영향 범위 내, 검은색 : 영향 범위 외, 빨간색: 중요케이블)                 
 """)
 
 # UI for Address and Distance Input
 def address_and_distance_input():
     with st.container():
-        address = st.text_input("🏠화장발생 주소를 입력하세요 :", "경남 양산시 중뼄길 36", key='address_input', help="주소를 입력하고 GPS 좌표를 조회하세요.")
-        distance_limit_str = st.text_input('📏화장영향 거리를 입력하세요 :', '1000', key='distance_input')
+        address = st.text_input("🏠화재발생 주소를 입력하세요 :", "경남 양산시 중뼄길 36", key='address_input', help="주소를 입력하고 GPS 좌표를 조회하세요.")
+        distance_limit_str = st.text_input('📏화재영향 거리를 입력하세요 :', '1000', key='distance_input')
 
-        if st.button("화장발생지점 조회 🚁️", key='gps_button', help="입력된 주소의 GPS 좌표를 조회합니다."):
+        if st.button("화재발생지점 조회 🚁️", key='gps_button', help="입력된 주소의 GPS 좌표를 조회합니다."):
             gps_coordinates = get_gps_from_address(address)
             if gps_coordinates:
                 st.session_state['gps_coordinates'] = gps_coordinates  # Store in session_state
