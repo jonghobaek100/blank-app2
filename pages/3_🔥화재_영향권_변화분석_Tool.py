@@ -14,11 +14,12 @@ from openai import OpenAI  # OpenAI API 추가
 NAVER_CLIENT_ID = st.secrets.get("NAVER_CLIENT_ID", None)
 NAVER_CLIENT_SECRET = st.secrets.get("NAVER_CLIENT_SECRET", None)
 WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", None)
+WEATHER_BASE_URL = st.secrets.get("WEATHER_BASE_URL", None)
 OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
 
 # 환경 변수 확인
-if not all([NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, WEATHER_API_KEY, OPENAI_API_KEY]):
-    st.error("필수 API 키가 누락되었습니다. Streamlit Cloud Secrets를 확인하세요.")
+if not all([NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, WEATHER_API_KEY, WEATHER_BASE_URL, OPENAI_API_KEY]):
+    st.error("필수 API 키 또는 URL이 누락되었습니다. Streamlit Cloud Secrets를 확인하세요.")
 
 # OpenAI client 설정
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -52,6 +53,10 @@ def get_gps_from_address(address):
 
 # Function to get weather information from the Korea Meteorological Administration (KMA) API
 def get_weather_info(latitude, longitude):
+    if not WEATHER_BASE_URL:
+        st.error("기상청 API URL이 설정되지 않았습니다.")
+        return None
+
     now = datetime.datetime.now(seoul_tz) - datetime.timedelta(hours=1)
     base_date = now.strftime("%Y%m%d")
     base_time = now.strftime("%H00")
