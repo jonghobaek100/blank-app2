@@ -4,7 +4,7 @@ import requests
 from geopy.distance import geodesic
 import folium
 from streamlit_folium import folium_static
-from folium import Circle
+from folium import Polygon, CircleMarker
 import datetime
 import pytz
 from openai import OpenAI  # OpenAI API 추가
@@ -89,14 +89,16 @@ def get_weather_info(latitude, longitude):
         return None
 
 # Function to predict fire spread using OpenAI API
-def predict_fire_spread(gps_coordinates, wind_speed, wind_direction):
+def predict_fire_spread(gps_coordinates, wind_speed, wind_direction, distance_limit):
     try:
         prompt = (
-            f"현재 GPS 좌표: {gps_coordinates}, 풍속: {wind_speed}m/s, 풍향: {wind_direction}°. "
-            "이를 바탕으로 1시간, 2시간, 3시간 후 화재 확산 범위를 추정해 주세요. 각 범위는 중심 좌표와 반경으로 출력해주세요."
+            f"현재 GPS 좌표: {gps_coordinates}, 풍속: {wind_speed}m/s, 풍향: {wind_direction}°, "
+            f"영향 반경: {distance_limit}m. "
+            "1시간, 2시간, 3시간 후의 화재 확산 예상 범위를 타원형으로 추정해 주세요. "
+            "타원의 중심 좌표와 각 축의 길이를 제시하고, 각 시간별 확산 방향을 고려하여 범위를 표시해 주세요."
         )
         response = client.chat.completions.create(
-            model="gpt-4o",  # 4o 모델로 변경
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "당신은 화재 확산 예측 전문가입니다."},
                 {"role": "user", "content": prompt}
@@ -121,16 +123,30 @@ def display_fire_spread_map(gps_coordinates, predictions):
         icon=folium.Icon(icon="fire", color="red")
     ).add_to(m)
 
-    # 예측 반경 표시
-    radii = [6.84, 13.68, 20.52]  # 단순 예시 반경 (km)
-    for i, radius in enumerate(radii):
-        folium.Circle(
-            location=gps_coordinates,
-            radius=radius * 1000,  # 반경을 미터로 변환
-            color="blue" if i == 0 else ("orange" if i == 1 else "green"),
+    # 예측된 확산 범위 표시
+    for prediction in predictions:
+        center = prediction['center']
+        axes = prediction['axes']
+        direction = prediction['direction']
+        time = prediction['time']
+
+        folium.Marker(
+            location=center,
+            popup=f"{time} 후 중심: {center}",
+            icon=folium.Icon(icon="info-sign", color="blue")
+        ).add_to(m)
+
+        folium.Polygon(
+            locations=[
+                [center[0] + axes[0] * 0.00001, center[1] + axes[1] * 0.00001],
+                [center[0] - axes[0] * 0.00001, center[1] - axes[1] * 0.00001],
+                [center[0] + axes[0] * 0.00001, center[1] - axes[1] * 0.00001],
+                [center[0] - axes[0] * 0.00001, center[1] + axes[1] * 0.00001],
+            ],
+            color="blue" if time == "1시간" else ("orange" if time == "2시간" else "green"),
             fill=True,
-            fill_opacity=0.3,
-            popup=f"{i+1}시간 후 예상 확산 범위 ({radius} km)"
+            fill_opacity=0.4,
+            popup=f"{time} 후 확산 범위"
         ).add_to(m)
 
     folium_static(m)
@@ -160,7 +176,13 @@ def address_and_distance_input():
                     wind_speed = next((item['obsrValue'] for item in weather_data if item['category'] == 'WSD'), None)
                     wind_direction = next((item['obsrValue'] for item in weather_data if item['category'] == 'VEC'), None)
                     if wind_speed and wind_direction:
-                        fire_spread_prediction = predict_fire_spread(gps_coordinates, wind_speed, wind_direction)
+                        try:
+                            distance_limit = float(distance_limit_str)
+                        except ValueError:
+                            st.error("유효한 숫자를 입력하세요.")
+                            return
+
+                        fire_spread_prediction = predict_fire_spread(gps_coordinates, wind_speed, wind_direction, distance_limit)
                         if fire_spread_prediction:
                             st.markdown("**화재 확산 예측 결과**")
                             st.text(fire_spread_prediction)
