@@ -9,21 +9,19 @@ import streamlit.components.v1 as components
 import datetime
 import pytz
 from openai import OpenAI  # OpenAI API 추가
-import os
-from dotenv import load_dotenv
 
-# .env 파일 로드
-load_dotenv()
-
-# API 키 및 URL 설정
-NAVER_CLIENT_ID = os.getenv('NAVER_CLIENT_ID')
-NAVER_CLIENT_SECRET = os.getenv('NAVER_CLIENT_SECRET')
-WEATHER_API_KEY = os.getenv('WEATHER_API_KEY')
-WEATHER_BASE_URL = os.getenv('WEATHER_BASE_URL')
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+# Streamlit Secrets 설정
+NAVER_CLIENT_ID = st.secrets["NAVER_CLIENT_ID"]
+NAVER_CLIENT_SECRET = st.secrets["NAVER_CLIENT_SECRET"]
+WEATHER_API_KEY = st.secrets["WEATHER_API_KEY"]
+OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
 
 # OpenAI client 설정
 client = OpenAI(api_key=OPENAI_API_KEY)
+
+# API 키 확인
+if not all([NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, WEATHER_API_KEY, OPENAI_API_KEY]):
+    st.error("API 키가 누락되었습니다. Streamlit Cloud Secrets에서 키를 확인하세요.")
 
 # 전역변수 선언
 seoul_tz = pytz.timezone('Asia/Seoul')
