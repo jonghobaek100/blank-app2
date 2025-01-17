@@ -4,8 +4,7 @@ import requests
 from geopy.distance import geodesic
 import folium
 from streamlit_folium import folium_static
-from folium import PolyLine
-import streamlit.components.v1 as components
+from folium import Circle
 import datetime
 import pytz
 from openai import OpenAI  # OpenAI API 추가
@@ -105,12 +104,36 @@ def predict_fire_spread(gps_coordinates, wind_speed, wind_direction):
             temperature=0.7
         )
         st.write("**OpenAI 응답 디버깅**", response)  # 응답 내용 출력
-        # OpenAI 응답 처리 수정
         fire_spread_prediction = response.choices[0].message.content
         return fire_spread_prediction
     except Exception as e:
         st.error(f"OpenAI API 요청에 실패했습니다: {e}")
         return None
+
+# Function to display fire spread on map
+def display_fire_spread_map(gps_coordinates, predictions):
+    m = folium.Map(location=gps_coordinates, zoom_start=13)
+
+    # 현재 발생 지점 표시
+    folium.Marker(
+        location=gps_coordinates,
+        popup="현재 화재 발생 지점",
+        icon=folium.Icon(icon="fire", color="red")
+    ).add_to(m)
+
+    # 예측 반경 표시
+    radii = [6.84, 13.68, 20.52]  # 단순 예시 반경 (km)
+    for i, radius in enumerate(radii):
+        folium.Circle(
+            location=gps_coordinates,
+            radius=radius * 1000,  # 반경을 미터로 변환
+            color="blue" if i == 0 else ("orange" if i == 1 else "green"),
+            fill=True,
+            fill_opacity=0.3,
+            popup=f"{i+1}시간 후 예상 확산 범위 ({radius} km)"
+        ).add_to(m)
+
+    folium_static(m)
 
 # Main Streamlit app
 st.title("🔥 화재 영향권 케이블 조회 🗺️")
@@ -141,6 +164,8 @@ def address_and_distance_input():
                         if fire_spread_prediction:
                             st.markdown("**화재 확산 예측 결과**")
                             st.text(fire_spread_prediction)
+                            # 지도에 표시
+                            display_fire_spread_map(gps_coordinates, fire_spread_prediction)
                     else:
                         st.error("풍속 또는 풍향 데이터를 가져올 수 없습니다.")
             else:
@@ -148,4 +173,3 @@ def address_and_distance_input():
 
 # Run the address and distance input function
 address_and_distance_input()
-
