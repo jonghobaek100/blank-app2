@@ -92,14 +92,14 @@ def predict_fire_spread(gps_coordinates, wind_speed, wind_direction):
             "이를 바탕으로 1시간, 2시간, 3시간 후 화재 확산 범위를 추정해 주세요. 각 범위는 중심 좌표와 반경으로 출력해주세요."
         )
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4",  # 최신 API 방식 적용
             messages=[
                 {"role": "system", "content": "당신은 화재 확산 예측 전문가입니다."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7
         )
-        fire_spread_prediction = response['choices'][0]['message']['content']
+        fire_spread_prediction = response.choices[0].message['content']
         return fire_spread_prediction
     except Exception as e:
         st.error(f"OpenAI API 요청에 실패했습니다: {e}")
