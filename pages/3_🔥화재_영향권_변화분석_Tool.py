@@ -11,17 +11,17 @@ import pytz
 from openai import OpenAI  # OpenAI API 추가
 
 # Streamlit Secrets 설정
-NAVER_CLIENT_ID = st.secrets["NAVER_CLIENT_ID"]
-NAVER_CLIENT_SECRET = st.secrets["NAVER_CLIENT_SECRET"]
-WEATHER_API_KEY = st.secrets["WEATHER_API_KEY"]
-OPENAI_API_KEY = st.secrets["OPENAI_API_KEY"]
+NAVER_CLIENT_ID = st.secrets.get("NAVER_CLIENT_ID", None)
+NAVER_CLIENT_SECRET = st.secrets.get("NAVER_CLIENT_SECRET", None)
+WEATHER_API_KEY = st.secrets.get("WEATHER_API_KEY", None)
+OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", None)
+
+# 환경 변수 확인
+if not all([NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, WEATHER_API_KEY, OPENAI_API_KEY]):
+    st.error("필수 API 키가 누락되었습니다. Streamlit Cloud Secrets를 확인하세요.")
 
 # OpenAI client 설정
 client = OpenAI(api_key=OPENAI_API_KEY)
-
-# API 키 확인
-if not all([NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, WEATHER_API_KEY, OPENAI_API_KEY]):
-    st.error("API 키가 누락되었습니다. Streamlit Cloud Secrets에서 키를 확인하세요.")
 
 # 전역변수 선언
 seoul_tz = pytz.timezone('Asia/Seoul')
@@ -143,3 +143,4 @@ def address_and_distance_input():
 
 # Run the address and distance input function
 address_and_distance_input()
+
